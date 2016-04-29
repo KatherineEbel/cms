@@ -1,24 +1,15 @@
-require "sinatra"
-require "sinatra/reloader"
-require "pry"
-
-before do
-  @files = Dir.foreach("data").reject do |file|
-    file == "." || file == ".."
-  end 
+require 'sinatra'
+require 'sinatra/reloader'
+require 'tilt/erubis'
+require 'pry'
+get '/' do
+  @files = Dir.foreach('data').reject { |filename| filename == '.' || filename == '..' }
+  erb :index, layout: :layout
 end
 
-helpers do
-  def display(file)a
-    file.split("\n\n")
-  end
-end
-
-get "/" do
-  
-  erb :home, layout: :layout
-end
-
-get "/files/file" do
-
+get "/:filename" do
+  file_path = "data/" + params[:filename]
+  headers["Content-Type"] = "text/plain"
+  binding.pry
+  @file = File.read file_path
 end
