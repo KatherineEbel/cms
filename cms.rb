@@ -1,8 +1,24 @@
 require "sinatra"
 require "sinatra/reloader"
-require "sinatra/content_for"
-require "tilt/erubis"
+require "pry"
+
+before do
+  @files = Dir.foreach("data").reject do |file|
+    file == "." || file == ".."
+  end 
+end
+
+helpers do
+  def display(file)a
+    file.split("\n\n")
+  end
+end
 
 get "/" do
-  @message = "Getting Started"
+  
+  erb :home, layout: :layout
+end
+
+get "/files/file" do
+
 end
