@@ -36,4 +36,11 @@ class CMSTest < Minitest::Test
     assert_equal 200, last_response.status
     assert_includes last_response.body, "nothere.txt not found"
   end
+
+  def test_renders_markdown
+    get '/about.md'
+    assert_equal 200, last_response.status
+    assert_equal 'text/html;charset=utf-8', last_response["Content-Type"]
+    assert_includes last_response.body, '<h1>Ruby is...</h1>'
+  end
 end
