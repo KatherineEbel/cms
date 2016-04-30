@@ -43,4 +43,23 @@ class CMSTest < Minitest::Test
     assert_equal 'text/html;charset=utf-8', last_response["Content-Type"]
     assert_includes last_response.body, '<h1>Ruby is...</h1>'
   end
+
+  def test_editing_file
+    get "/changes.txt/edit"
+
+    assert_equal 200, last_response.status
+    assert_includes last_response.body, "<textarea"
+  end
+
+  def test_file_updated
+    post "/changes.txt", content: "new content"
+
+    assert_equal 302, last_response.status
+    follow_redirect!
+    assert_includes last_response.body, "changes.txt has been updated"
+
+    get "/changes.txt"
+    assert_equal 200, last_response.status
+    assert_includes last_response.body, "new content"
+  end
 end
