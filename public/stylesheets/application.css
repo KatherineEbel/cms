@@ -14,3 +14,12 @@ body {
   margin: 2em;
   padding: 1em;
 }
+
+#signin {
+  display: inline;
+}
+
+.user-status {
+  font-style: italic;
+  font-size: 0.9em;
+}

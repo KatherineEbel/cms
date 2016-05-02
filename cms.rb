@@ -95,8 +95,29 @@ end
 post "/:filename/delete" do 
   file_path = File.join(data_path, params[:filename])
   File.delete(file_path)
-  session[:message] = "#{file_path} has been deleted"
+  session[:message] = "#{params[:filename]} has been deleted"
   redirect '/'
 end
 
+get "/users/signin" do
+  erb :signin
+end
 
+post "/users/signin" do
+  if params[:username] == "admin" && params[:password] == "secret"
+    session[:username] = params[:username]
+    session[:message] = "Welcome!"
+    redirect '/'
+  else
+    session[:message] = "Invalid Credentials"
+    status 422
+    erb :signin 
+  end
+end
+
+post "/users/signout" do 
+  username = session[:username]
+  session.delete(:username)
+  session[:message] = "#{username} successfully signed out"
+  redirect '/'
+end
