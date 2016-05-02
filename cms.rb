@@ -20,7 +20,17 @@ configure do
   set :session_secret, 'secret'
 end
 
- def load_file(filepath)
+def admin?
+  session[:username] == "admin"
+end
+
+def permission_denied
+  status 422
+  session[:message] = "You must be signed in to do that"
+  redirect '/'
+end
+
+def load_file(filepath)
   content = File.read filepath
   case File.extname(filepath)
   when '.txt'
@@ -36,6 +46,18 @@ def render_markdown(text)
   markdown.render(text)
 end
 
+def valid_filename?
+  filename.size > 0 && (filename.end_with?('.txt') || filename.end_with?('.md'))
+end
+
+def error_message(filename)
+  case filename
+  when filename.size == 0 then "A name is required"
+  when filename.end_with?('.txt') || filename.end_with?('.md') 
+    "Valid filenames include .txt or .md extensions."
+  end
+end
+
 get '/' do
   pattern = File.join(data_path, "*")
   @files = Dir.glob(pattern).map do |path|
@@ -45,25 +67,21 @@ get '/' do
 end
 
 get "/new" do
-  erb :new
+  admin? ? (erb :new) : permission_denied
 end
 
 post "/create" do
   filename = params[:filename].to_s
-
-  if filename.size == 0
-    session[:message] = "A name is required"
-    status 422
-    erb :new
-  elsif filename.end_with?('.txt') || filename.end_with?('.md')
+  permission_denied if !admin?
+  if valid_filename?
     file_path = File.join(data_path, filename)
     File.write(file_path, '')
     session[:message] = "#{filename} has been created"
     redirect '/'
   else
-    session[:message] = "Valid filenames include .txt and .md extensions."
+    error_message filename
     status 422
-    erb :new 
+    erb :new
   end
 end
 
@@ -79,24 +97,36 @@ get "/:filename" do
 end
   
 get "/:filename/edit" do
-  file_path = File.join(data_path, params[:filename])
-  @filename = params[:filename]
-  @content = File.read(file_path) 
-  erb :edit
+  if admin? 
+    file_path = File.join(data_path, params[:filename])
+    @filename = params[:filename]
+    @content = File.read(file_path) 
+    erb :edit
+  else
+    permission_denied
+  end
 end
 
 post "/:filename" do
-  file_path = File.join(data_path, params[:filename])
-  File.write(file_path, params[:content])
-  session[:message] = "#{params[:filename]} has been updated"
-  redirect '/'
+  if admin?
+    file_path = File.join(data_path, params[:filename])
+    File.write(file_path, params[:content])
+    session[:message] = "#{params[:filename]} has been updated"
+    redirect '/'
+  else
+    permission_denied
+  end
 end
 
 post "/:filename/delete" do 
-  file_path = File.join(data_path, params[:filename])
-  File.delete(file_path)
-  session[:message] = "#{params[:filename]} has been deleted"
-  redirect '/'
+  if admin?
+    file_path = File.join(data_path, params[:filename])
+    File.delete(file_path)
+    session[:message] = "#{params[:filename]} has been deleted"
+    redirect '/'
+  else
+    permission_denied
+  end
 end
 
 get "/users/signin" do

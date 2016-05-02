@@ -31,6 +31,10 @@ class CMSTest < Minitest::Test
     last_request.env['rack.session']
   end
 
+  def admin_session
+    { "rack.session" => { username: "admin" } }
+  end
+
   def test_index
     create_document "about.md"
     create_document "changes.txt"
@@ -65,7 +69,7 @@ class CMSTest < Minitest::Test
 
   def test_editing_file
     create_document 'changes.txt', '1993 - Yukihiro Matsumoto dreams up Ruby.'
-    get "/changes.txt/edit"
+    get "/changes.txt/edit", {}, admin_session
 
     assert_equal 200, last_response.status
     assert_includes last_response.body, "<textarea"
@@ -155,3 +159,7 @@ class CMSTest < Minitest::Test
     assert_includes last_response.body, "Sign In"
   end
 end
+
+
+
+
