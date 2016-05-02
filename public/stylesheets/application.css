@@ -1,0 +1,16 @@
+body {
+  padding: 1em;
+  margin: 0, auto;
+  font-family: sans-serif;
+}
+
+.flash-message {
+  background-color: #FFFF99; 
+  padding: 10px;
+  font-size: 1.5em;
+}
+
+.index {
+  margin: 2em;
+  padding: 1em;
+}

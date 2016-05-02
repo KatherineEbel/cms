@@ -1,6 +1,9 @@
-<ul>
+<ul class="index">
   <% @files.each_with_index do |file, index| %>
-    <li><a href="/<%= file %>"><%= file %></a></li><a href="/<%= file %>/edit">Edit</a>
+    <li>
+      <a href="/<%= file %>"><%= file %></a>
+      <a href="/<%= file %>/edit">Edit</a>
+    </li>
     <% end %>
 </ul>
 
