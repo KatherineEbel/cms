@@ -44,6 +44,29 @@ get '/' do
   erb :index, layout: :layout
 end
 
+get "/new" do
+  erb :new
+end
+
+post "/create" do
+  filename = params[:filename].to_s
+
+  if filename.size == 0
+    session[:message] = "A name is required"
+    status 422
+    erb :new
+  elsif filename.end_with?('.txt') || filename.end_with?('.md')
+    file_path = File.join(data_path, filename)
+    File.write(file_path, '')
+    session[:message] = "#{filename} has been created"
+    redirect '/'
+  else
+    session[:message] = "Valid filenames include .txt and .md extensions."
+    status 422
+    erb :new 
+  end
+end
+
 get "/:filename" do
   file_path = File.join(data_path, params[:filename])
 
@@ -59,7 +82,7 @@ get "/:filename/edit" do
   file_path = File.join(data_path, params[:filename])
   @filename = params[:filename]
   @content = File.read(file_path) 
-  erb :edit, layout: :layout
+  erb :edit
 end
 
 post "/:filename" do
@@ -69,8 +92,5 @@ post "/:filename" do
   redirect '/'
 end
 
-post "/:filename/new" do
-
-end
 
 
