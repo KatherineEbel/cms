@@ -25,7 +25,7 @@ def admin?
 end
 
 def permission_denied
-  status 422
+  status 302
   session[:message] = "You must be signed in to do that"
   redirect '/'
 end
@@ -46,15 +46,14 @@ def render_markdown(text)
   markdown.render(text)
 end
 
-def valid_filename?
+def valid_filename?(filename)
   filename.size > 0 && (filename.end_with?('.txt') || filename.end_with?('.md'))
 end
 
 def error_message(filename)
-  case filename
-  when filename.size == 0 then "A name is required"
-  when filename.end_with?('.txt') || filename.end_with?('.md') 
-    "Valid filenames include .txt or .md extensions."
+  return "A name is required" if filename.size == 0  
+  if filename.end_with?('.txt') || filename.end_with?('.md') 
+    return "Valid filenames include .txt or .md extensions."
   end
 end
 
@@ -73,13 +72,13 @@ end
 post "/create" do
   filename = params[:filename].to_s
   permission_denied if !admin?
-  if valid_filename?
+  if valid_filename?(filename)
     file_path = File.join(data_path, filename)
     File.write(file_path, '')
     session[:message] = "#{filename} has been created"
     redirect '/'
   else
-    error_message filename
+    session[:message] = error_message filename
     status 422
     erb :new
   end
