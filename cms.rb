@@ -2,7 +2,13 @@ require 'sinatra'
 require 'sinatra/reloader'
 require 'tilt/erubis'
 require 'redcarpet'
+require 'yaml'
 require 'pry'
+
+configure do
+  enable :sessions
+  set :session_secret, 'secret'
+end
 
 root = File.expand_path('..', __FILE__)
 
@@ -14,14 +20,21 @@ def data_path
     end
   end
 
-
-configure do
-  enable :sessions
-  set :session_secret, 'secret'
+def credentials_path
+  if ENV['RACK_ENV'] == 'test'
+    File.expand_path("../test/users.yml", __FILE__)
+  else
+    File.expand_path("../users.yml", __FILE__)
+  end
 end
 
-def admin?
-  session[:username] == "admin"
+def valid_user?(username, password)
+  users = YAML.load_file credentials_path
+  users.include?(username) && users[username] == password
+end
+
+def signed_in?
+  session[:username] != nil
 end
 
 def permission_denied
@@ -66,12 +79,12 @@ get '/' do
 end
 
 get "/new" do
-  admin? ? (erb :new) : permission_denied
+  signed_in? ? (erb :new) : permission_denied
 end
 
 post "/create" do
   filename = params[:filename].to_s
-  permission_denied if !admin?
+  permission_denied if !signed_in?
   if valid_filename?(filename)
     file_path = File.join(data_path, filename)
     File.write(file_path, '')
@@ -96,7 +109,7 @@ get "/:filename" do
 end
   
 get "/:filename/edit" do
-  if admin? 
+  if signed_in? 
     file_path = File.join(data_path, params[:filename])
     @filename = params[:filename]
     @content = File.read(file_path) 
@@ -107,7 +120,7 @@ get "/:filename/edit" do
 end
 
 post "/:filename" do
-  if admin?
+  if signed_in?
     file_path = File.join(data_path, params[:filename])
     File.write(file_path, params[:content])
     session[:message] = "#{params[:filename]} has been updated"
@@ -118,7 +131,7 @@ post "/:filename" do
 end
 
 post "/:filename/delete" do 
-  if admin?
+  if signed_in?
     file_path = File.join(data_path, params[:filename])
     File.delete(file_path)
     session[:message] = "#{params[:filename]} has been deleted"
@@ -133,7 +146,7 @@ get "/users/signin" do
 end
 
 post "/users/signin" do
-  if params[:username] == "admin" && params[:password] == "secret"
+  if valid_user? params[:username], params[:password]
     session[:username] = params[:username]
     session[:message] = "Welcome!"
     redirect '/'

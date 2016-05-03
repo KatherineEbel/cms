@@ -3,6 +3,7 @@ ENV["RACK_ENV"] = "test"
 require 'minitest/autorun'
 require 'rack/test'
 require 'fileutils'
+require 'yaml'
 
 require_relative '../cms'
 
@@ -32,7 +33,7 @@ class CMSTest < Minitest::Test
   end
 
   def admin_session
-    { "rack.session" => { username: "admin" } }
+    { "rack.session" => { username: "bill" } }
   end
 
   def test_index
@@ -163,25 +164,25 @@ class CMSTest < Minitest::Test
   end
 
   def test_signin
-    post "/users/signin", username: "admin", password: "secret"
+    post "/users/signin", { username: "bill", password: "billspassword" }
     assert_equal 302, last_response.status 
     assert_equal "Welcome!", session[:message]
-    assert_equal "admin", session[:username]
+    assert_equal "bill", session[:username]
 
     get last_response['Location']
-    assert_includes last_response.body, "Signed in as admin"
+    assert_includes last_response.body, "Signed in as bill"
   end
   
   def test_signin_invalid_credentials
-    post "/users/signin", username: "baduser", password: "wrongsecret"
+    post "/users/signin", { username: "baduser", password: "wrongsecret" }
     assert_equal 422, last_response.status
     assert_equal nil, session[:username]
     assert_includes last_response.body, "Invalid Credentials"
   end
   
   def test_signout
-    get "/", {}, {'rack.session' => { username: 'admin' } }
-    assert_includes last_response.body, "Signed in as admin"
+    get "/", {}, {'rack.session' => { username: 'bill' } }
+    assert_includes last_response.body, "Signed in as bill"
 
     post "/users/signout"
     follow_redirect!
@@ -190,7 +191,3 @@ class CMSTest < Minitest::Test
     assert_includes last_response.body, "Sign In"
   end
 end
-
-
-
-
