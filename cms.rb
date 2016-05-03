@@ -3,6 +3,7 @@ require 'sinatra/reloader'
 require 'tilt/erubis'
 require 'redcarpet'
 require 'yaml'
+require 'bcrypt'
 require 'pry'
 
 configure do
@@ -30,7 +31,9 @@ end
 
 def valid_user?(username, password)
   users = YAML.load_file credentials_path
-  users.include?(username) && users[username] == password
+  return false if !users.key? username
+  hashed_password = BCrypt::Password.new users[username]
+  users.key?(username) &&  hashed_password == password
 end
 
 def signed_in?

@@ -1,3 +1,5 @@
-bill : billspassword
-kathy : kathyspassword
-dave : davespassword
+admin: "$10$I1IfJqI3pJQchdh4dK.qE.Tsf.uVyi8hGd5Zc/Oyj5OS2jH1rKlSW"
+bill: "$2a$10$/z0qvvubGszhcvXw2BARx.lbJ4leU4X7XgaukIf2057aNTmQoJrH6"
+kathy: "$2a$10$tUAOPFyoQn9OS0ai3VsejOmzPKHdq0pS1Xhne3IRDk0K.2hJ5Qh9m"
+dave: "$10$w/WaJddEhsOnKFq6NFUiauErLrL.ueCRwcXIsrxDKfkV2rso6M4J."
+
