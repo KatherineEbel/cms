@@ -1,5 +1,8 @@
-<ul>
+<ul class="documents">
   <% documents.each do |doc| %>
-  <li><a href="/<%= doc %>"><%= doc %></a></li>
+  <li>
+    <a href="/<%= doc %>"><%= doc %></a>
+    <a href="/<%= doc %>/edit">Edit</a>
+  </li>
   <% end %>
 </ul>

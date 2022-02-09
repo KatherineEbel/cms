@@ -14,6 +14,7 @@ group :development do
 end
 
 gem 'erubis'
+gem 'redcarpet'
 gem 'sinatra'
 gem 'sinatra-contrib'
 
