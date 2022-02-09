@@ -5,17 +5,25 @@ ENV['RACK_ENV'] = 'test'
 require 'minitest/autorun'
 require 'rack/test'
 require_relative '../cms'
+require 'fileutils'
 
 class CMSTest < Minitest::Test
   include Rack::Test::Methods
 
-  def write_test_file
-    path = Dir.new('test/content')
-    File.new("#{path.to_path}/test.txt", 'w')
+  def create_document(name, content = '')
+    File.open(File.join(data_path, name), 'w') do |file|
+      file.write(content)
+    end
   end
 
   def setup
-    write_test_file
+    FileUtils.mkdir_p(data_path)
+    create_document('changes.txt', "I'm baby shabby chic")
+    create_document('about.md', '<h1>Ruby is...</h1>')
+  end
+
+  def teardown
+    FileUtils.rm_rf(data_path)
   end
 
   def app
@@ -26,30 +34,16 @@ class CMSTest < Minitest::Test
     get '/'
     assert last_response.ok?
     assert_equal('text/html;charset=utf-8', last_response['Content-Type'])
-    %w[about.txt changes.txt history.txt].each do |f|
+    %w[about.md changes.txt].each do |f|
       assert last_response.body.include?(f)
     end
   end
 
   def test_get_file
-    get '/about.txt'
-    assert last_response.ok?
-    assert_equal('text/plain;charset=utf-8', last_response['Content-Type'])
-    assert_includes last_response.body, "I'm baby shabby chic"
-  end
-
-  def test_get_another_file
     get '/changes.txt'
     assert last_response.ok?
     assert_equal('text/plain;charset=utf-8', last_response['Content-Type'])
-    assert last_response.body.include?('Photo booth fixie iPhone')
-  end
-
-  def test_get_final_file
-    get '/history.txt'
-    assert last_response.ok?
-    assert_equal('text/plain;charset=utf-8', last_response['Content-Type'])
-    assert last_response.body.include?('Organic tattooed chia, mixtape shabby chic')
+    assert_includes last_response.body, "I'm baby shabby chic"
   end
 
   def test_nonexistant_file
@@ -72,24 +66,24 @@ class CMSTest < Minitest::Test
   end
 
   def test_get_edit_form
-    get '/about.txt/edit'
+    get '/changes.txt/edit'
     assert last_response.ok?
   end
 
   def test_edit_form_controls
-    get '/about.txt/edit'
-    assert_includes last_response.body, '<textarea'
-    assert_includes last_response.body, 'Save Changes'
+    get '/changes.txt/edit'
+    assert_includes last_response.body, '<textarea name="text"'
+    assert_includes last_response.body, '<button type="submit"'
   end
 
   def test_text_area_contains_file
-    get '/about.txt/edit'
-    assert_includes last_response.body, "I'm baby shabby chic live-edge lomo palo"
+    get '/changes.txt/edit'
+    assert_includes last_response.body, "I'm baby shabby chic"
   end
 
   def test_put_file
-    put '/test.txt/edit', text: 'Foo'
-    expected_text = 'test.txt has been updated.'
+    put '/changes.txt/edit', text: 'Foo'
+    expected_text = 'changes.txt has been updated.'
     assert_equal(302, last_response.status)
     get last_response['Location']
     assert last_response.ok?

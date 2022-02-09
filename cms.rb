@@ -6,7 +6,6 @@ require 'sinatra/content_for'
 require 'redcarpet'
 require 'tilt/erubis'
 
-DIR_NAME = ENV['RACK_ENV'] == 'test' ? 'test/content' : 'content'
 
 configure do
   enable :sessions
@@ -14,11 +13,15 @@ configure do
 end
 
 before do
-  @directory = Dir.new(DIR_NAME)
+  @directory = Dir.new(data_path)
   @markdown = Redcarpet::Markdown.new(Redcarpet::Render::HTML)
 end
 
 helpers do
+end
+
+def data_path
+  ENV['RACK_ENV'] == 'test' ? 'test/content' : 'content'
 end
 
 def path_for(filename)

@@ -1,7 +1,7 @@
 <form class="edit" action="/<%= filename %>/edit" method="post">
   <input type="hidden" name="_method" value="PUT">
   <label for="text">Edit content of <%= filename %></label>
-  <textarea id="text" name="text" rows="8" value="<%= params[:text] %>"><%= text %></textarea>
+  <textarea name="text" id="text" rows="8" value="<%= params[:text] %>"><%= text %></textarea>
   <div class="actions">
     <button type="submit">Save Changes</button>
     <button type="button">Cancel</button>
