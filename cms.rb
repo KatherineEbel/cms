@@ -50,13 +50,25 @@ end
 
 def write_file(path, text)
   File.open(path, 'w') do |f|
-    f.puts text
+    f.write text
+  end
+end
+
+def error_for(file_name)
+  if file_name.empty?
+    'A name is required.'
+  elsif !%w[.txt .md].include?(File.extname(file_name))
+    'Invalid file type. Options include .txt and .md'
   end
 end
 
 get '/' do
   documents = @directory.children
   erb :index, locals: { documents: }
+end
+
+get '/new' do
+  erb :new_document
 end
 
 get '/:filename' do
@@ -70,10 +82,38 @@ get '/:filename/edit' do
   erb :edit_file, locals: { filename:, text: }
 end
 
+post '/new' do
+  file_name = params[:file_name].strip
+  error = error_for(file_name)
+  if error
+    session[:error] = error
+    return erb :new_document
+  end
+  begin
+    File.new(File.join(data_path, file_name), 'w')
+    session[:success] = "#{file_name} was created."
+    redirect '/'
+  rescue Errno::ENOENT
+    session[:error] = 'Server error: Unable to create file'
+    erb :new_document
+  end
+end
+
 put '/:filename/edit' do
   path = path_for(params[:filename])
   text = params[:text]
   write_file(path, text)
   session[:success] = "#{params[:filename]} has been updated."
+  redirect '/'
+end
+
+delete '/:file_name' do
+  path = path_for(params[:file_name])
+  begin
+    File.delete(path)
+    session[:success] = "#{params[:file_name]} was deleted."
+  rescue Errno::ENOENT
+    session[:error] = 'Unable to delete file'
+  end
   redirect '/'
 end

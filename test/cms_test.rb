@@ -89,4 +89,62 @@ class CMSTest < Minitest::Test
     assert last_response.ok?
     assert_includes last_response.body, expected_text
   end
+
+  def test_new_document_link
+    get '/'
+    assert_includes last_response.body, 'New Document'
+  end
+
+  def test_get_new
+    get '/new'
+    assert last_response.ok?
+    assert_includes last_response.body, '<input type="text"'
+    assert_includes last_response.body, '<button type="submit"'
+    assert_includes last_response.body, 'Add a new document'
+    assert_includes last_response.body, 'Create'
+  end
+
+  def test_post_new
+    post '/new', file_name: 'story.md'
+
+    expected_text = 'story.md was created.'
+    get last_response['Location']
+    assert last_response.ok?
+    assert_includes last_response.body, expected_text
+    assert_includes last_response.body, 'story.md'
+
+    get '/'
+    refute_includes last_response.body, expected_text
+  end
+
+  def test_post_new_no_name
+    post '/new', file_name: '     '
+    assert_includes last_response.body, 'A name is required.'
+  end
+
+  def test_post_invalid_ext
+    post '/new', file_name: 'story.jpg'
+    assert_includes last_response.body, 'Invalid file type. Options include .txt and .md'
+  end
+
+  def test_delete_button_exists
+    get '/'
+
+    count = last_response.body.scan(/<button/).size
+    assert_equal(2, count)
+  end
+
+  def test_delete_file
+    delete '/changes.txt'
+
+    expected_text = 'changes.txt was deleted.'
+    get last_response['Location']
+    assert last_response.ok?
+    assert_includes last_response.body, expected_text
+
+    count = last_response.body.scan(/<button/).size
+    assert_equal(1, count)
+    get '/'
+    refute_includes last_response.body, expected_text
+  end
 end

@@ -21,6 +21,10 @@ form.edit .actions {
     gap: 1rem;
 }
 
+label {
+    display: block;
+}
+
 .flash {
     background: #fefd96;
     padding: .5rem;
