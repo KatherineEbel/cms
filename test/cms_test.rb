@@ -34,7 +34,7 @@ class CMSTest < Minitest::Test
     get '/'
     assert last_response.ok?
     assert_equal('text/html;charset=utf-8', last_response['Content-Type'])
-    %w[about.md changes.txt].each do |f|
+    %w(about.md changes.txt).each do |f|
       assert last_response.body.include?(f)
     end
   end
@@ -124,13 +124,14 @@ class CMSTest < Minitest::Test
 
   def test_post_invalid_ext
     post '/new', file_name: 'story.jpg'
-    assert_includes last_response.body, 'Invalid file type. Options include .txt and .md'
+    assert_includes last_response.body,
+                    'Invalid file type. Options include .txt and .md'
   end
 
   def test_delete_button_exists
     get '/'
 
-    count = last_response.body.scan(/<button/).size
+    count = last_response.body.scan(/Delete/).size
     assert_equal(2, count)
   end
 
@@ -142,9 +143,52 @@ class CMSTest < Minitest::Test
     assert last_response.ok?
     assert_includes last_response.body, expected_text
 
-    count = last_response.body.scan(/<button/).size
+    count = last_response.body.scan(/Delete/).size
     assert_equal(1, count)
     get '/'
     refute_includes last_response.body, expected_text
+  end
+
+  def test_index_logged_out
+    get '/'
+    assert_includes last_response.body, 'Sign In'
+  end
+
+  def test_get_signin
+    get '/users/signin'
+    assert_includes last_response.body, '<button type="submit"'
+    assert_equal 2, last_response.body.scan(/<input/).size
+    assert_includes last_response.body, '<button type="submit"'
+  end
+
+  def test_signin_valid
+    post '/users/signin', username: 'admin', password: 'secret'
+    assert_equal(302, last_response.status)
+    expected_text = 'Welcome!'
+    get last_response['Location']
+    assert last_response.ok?
+    assert_includes last_response.body, expected_text
+    assert_includes last_response.body, 'Signed in as admin.'
+    assert_includes last_response.body, 'Sign Out'
+  end
+
+  def test_signin_invalid
+    post '/users/signin', username: 'johnny', password: 'foo'
+    expected_text = 'Invalid Credentials'
+    assert_equal 401, last_response.status
+    assert_includes last_response.body, expected_text
+    refute_includes last_response.body, 'Signed in as admin.'
+    refute_includes last_response.body, 'Sign Out'
+  end
+
+  def test_signout
+    post '/users/signin', username: 'admin', password: 'secret'
+    post '/users/signout'
+    expected_text = 'You have been signed out.'
+    get last_response['Location']
+    assert last_response.ok?
+    assert_includes last_response.body, expected_text
+    refute_includes last_response.body, 'Signed in as admin.'
+    assert_includes last_response.body, 'Sign In'
   end
 end

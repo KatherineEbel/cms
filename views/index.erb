@@ -1,14 +1,22 @@
 <a href="/new">New Document</a>
+<a href="/users/signin">Sign In</a>
 
 <ul class="documents">
   <% documents.each do |doc| %>
   <li>
     <a href="/<%= doc %>"><%= doc %></a>
     <a href="/<%= doc %>/edit">Edit</a>
-    <form action="/<%= doc %>" method="post">
+    <form class="delete" action="/<%= doc %>" method="post">
       <input type="hidden" name="_method" value="DELETE"/>
       <button type="submit">Delete</button>
     </form>
   </li>
   <% end %>
 </ul>
+
+<% if @user %>
+  <p><em>Signed in as <%= @user %>.</em></p>
+  <form action="/users/signout" method="post">
+    <button type="submit">Sign Out</button>
+  </form>
+<% end %>

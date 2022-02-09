@@ -21,6 +21,10 @@ form.edit .actions {
     gap: 1rem;
 }
 
+form.delete {
+    display: inline-block;
+}
+
 label {
     display: block;
 }

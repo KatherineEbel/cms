@@ -6,7 +6,6 @@ require 'sinatra/content_for'
 require 'redcarpet'
 require 'tilt/erubis'
 
-
 configure do
   enable :sessions
   set :session_secret, 'secret'
@@ -15,6 +14,7 @@ end
 before do
   @directory = Dir.new(data_path)
   @markdown = Redcarpet::Markdown.new(Redcarpet::Render::HTML)
+  @user = session[:user]
 end
 
 helpers do
@@ -57,7 +57,7 @@ end
 def error_for(file_name)
   if file_name.empty?
     'A name is required.'
-  elsif !%w[.txt .md].include?(File.extname(file_name))
+  elsif !%w(.txt .md).include?(File.extname(file_name))
     'Invalid file type. Options include .txt and .md'
   end
 end
@@ -73,6 +73,28 @@ end
 
 get '/:filename' do
   render_file(path_for(params[:filename]))
+end
+
+get '/users/signin' do
+  erb :signin
+end
+
+post '/users/signin' do
+  username, password = params.values_at(:username, :password)
+  if username == 'admin' && password == 'secret'
+    session[:success] = 'Welcome!'
+    session[:user] = username
+    redirect '/'
+  end
+  session[:error] = 'Invalid Credentials'
+  status 401
+  erb :signin
+end
+
+post '/users/signout' do
+  session.delete(:user)
+  session[:success] = 'You have been signed out.'
+  redirect '/'
 end
 
 get '/:filename/edit' do
