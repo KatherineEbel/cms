@@ -42,7 +42,7 @@ end
 def render_file(filename)
   case extension(filename)
   when '.txt' then send_file filename, type: :txt
-  when '.md' then  @markdown.render(File.read(filename))
+  when '.md' then  erb @markdown.render(File.read(filename))
   else
     halt 500, 'Unhandled file extension'
   end
