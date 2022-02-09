@@ -12,12 +12,8 @@
 </head>
 <body>
 
-<% if session[:success] %>
-  <p class="flash"><%= session.delete(:success) %></p>
-<% end %>
-
-<% if session[:error] %>
-  <p class="flash"><%= session.delete(:error) %></p>
+<% if session[:message] %>
+  <p class="flash"><%= session.delete(:message) %></p>
 <% end %>
 
 <main>

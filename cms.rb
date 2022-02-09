@@ -20,6 +20,16 @@ end
 helpers do
 end
 
+def authorized?
+  !session[:user].nil?
+end
+
+def authenticate
+  return if authorized?
+  session[:message] = 'You must be signed in to do that.'
+  redirect '/', 401
+end
+
 def data_path
   ENV['RACK_ENV'] == 'test' ? 'test/content' : 'content'
 end
@@ -27,7 +37,7 @@ end
 def path_for(filename)
   return "#{@directory.to_path}/#{filename}" if exists?(filename)
 
-  session[:error] = "#{filename} does not exist."
+  session[:message] = "#{filename} does not exist."
   redirect('/')
 end
 
@@ -49,9 +59,7 @@ def render_file(filename)
 end
 
 def write_file(path, text)
-  File.open(path, 'w') do |f|
-    f.write text
-  end
+  File.open(path, 'w') { |f| f.write text }
 end
 
 def error_for(file_name)
@@ -68,6 +76,7 @@ get '/' do
 end
 
 get '/new' do
+  authenticate
   erb :new_document
 end
 
@@ -82,22 +91,23 @@ end
 post '/users/signin' do
   username, password = params.values_at(:username, :password)
   if username == 'admin' && password == 'secret'
-    session[:success] = 'Welcome!'
+    session[:message] = 'Welcome!'
     session[:user] = username
     redirect '/'
   end
-  session[:error] = 'Invalid Credentials'
+  session[:message] = 'Invalid Credentials'
   status 401
   erb :signin
 end
 
 post '/users/signout' do
   session.delete(:user)
-  session[:success] = 'You have been signed out.'
+  session[:message] = 'You have been signed out.'
   redirect '/'
 end
 
 get '/:filename/edit' do
+  authenticate
   filename = params[:filename]
   path = path_for params[:filename]
   text = File.read(path)
@@ -105,37 +115,41 @@ get '/:filename/edit' do
 end
 
 post '/new' do
+  authenticate
   file_name = params[:file_name].strip
   error = error_for(file_name)
   if error
-    session[:error] = error
+    session[:message] = error
+    status 422
     return erb :new_document
   end
   begin
     File.new(File.join(data_path, file_name), 'w')
-    session[:success] = "#{file_name} was created."
+    session[:message] = "#{file_name} was created."
     redirect '/'
   rescue Errno::ENOENT
-    session[:error] = 'Server error: Unable to create file'
+    session[:message] = 'Server error: Unable to create file'
     erb :new_document
   end
 end
 
 put '/:filename/edit' do
+  authenticate
   path = path_for(params[:filename])
   text = params[:text]
   write_file(path, text)
-  session[:success] = "#{params[:filename]} has been updated."
+  session[:message] = "#{params[:filename]} has been updated."
   redirect '/'
 end
 
 delete '/:file_name' do
+  authenticate
   path = path_for(params[:file_name])
   begin
     File.delete(path)
-    session[:success] = "#{params[:file_name]} was deleted."
+    session[:message] = "#{params[:file_name]} was deleted."
   rescue Errno::ENOENT
-    session[:error] = 'Unable to delete file'
+    session[:message] = 'Unable to delete file'
   end
   redirect '/'
 end
