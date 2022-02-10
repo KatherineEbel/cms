@@ -5,9 +5,18 @@ body {
     font-size: 1.2rem;
 }
 
-a:last-of-type {
-    margin-left: 1rem;
+.documents {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
 }
+
+.documents li {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
 
 form.edit {
     display: flex;
@@ -32,4 +41,10 @@ label {
 .flash {
     background: #fefd96;
     padding: .5rem;
+}
+
+.user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }

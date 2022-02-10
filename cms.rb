@@ -5,6 +5,7 @@ require 'sinatra/reloader'
 require 'sinatra/content_for'
 require 'redcarpet'
 require 'tilt/erubis'
+require 'psych'
 
 configure do
   enable :sessions
@@ -17,21 +18,31 @@ before do
   @user = session[:user]
 end
 
-helpers do
+def data_path
+  ENV['RACK_ENV'] == 'test' ? 'test/content' : 'content'
+end
+
+def user_data
+  path = ENV['RACK_ENV'] == 'test' ? 'test/users.yaml' : 'config/users.yaml'
+  Psych.load_file(path)
 end
 
 def authorized?
   !session[:user].nil?
 end
 
-def authenticate
+def check_authorized
   return if authorized?
   session[:message] = 'You must be signed in to do that.'
   redirect '/', 401
 end
 
-def data_path
-  ENV['RACK_ENV'] == 'test' ? 'test/content' : 'content'
+def authenticate(username, password)
+  return unless user_data.find { |u, p| u == username && p == password }
+
+  session[:message] = 'Welcome!'
+  session[:user] = username
+  redirect '/'
 end
 
 def path_for(filename)
@@ -70,36 +81,38 @@ def error_for(file_name)
   end
 end
 
+# get index
 get '/' do
   documents = @directory.children
   erb :index, locals: { documents: }
 end
 
+# get new_document form
 get '/new' do
-  authenticate
+  check_authorized
   erb :new_document
 end
 
+# view document
 get '/:filename' do
   render_file(path_for(params[:filename]))
 end
 
+# get signin form
 get '/users/signin' do
   erb :signin
 end
 
+# post signin
 post '/users/signin' do
   username, password = params.values_at(:username, :password)
-  if username == 'admin' && password == 'secret'
-    session[:message] = 'Welcome!'
-    session[:user] = username
-    redirect '/'
-  end
+  authenticate(username, password)
   session[:message] = 'Invalid Credentials'
   status 401
   erb :signin
 end
 
+# post signout
 post '/users/signout' do
   session.delete(:user)
   session[:message] = 'You have been signed out.'
@@ -107,7 +120,7 @@ post '/users/signout' do
 end
 
 get '/:filename/edit' do
-  authenticate
+  check_authorized
   filename = params[:filename]
   path = path_for params[:filename]
   text = File.read(path)
@@ -115,7 +128,7 @@ get '/:filename/edit' do
 end
 
 post '/new' do
-  authenticate
+  check_authorized
   file_name = params[:file_name].strip
   error = error_for(file_name)
   if error
@@ -134,7 +147,7 @@ post '/new' do
 end
 
 put '/:filename/edit' do
-  authenticate
+  check_authorized
   path = path_for(params[:filename])
   text = params[:text]
   write_file(path, text)
@@ -143,7 +156,7 @@ put '/:filename/edit' do
 end
 
 delete '/:file_name' do
-  authenticate
+  check_authorized
   path = path_for(params[:file_name])
   begin
     File.delete(path)

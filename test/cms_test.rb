@@ -159,7 +159,7 @@ class CMSTest < Minitest::Test
   end
 
   def test_signin_valid
-    post '/users/signin', username: 'admin', password: 'secret'
+    post '/users/signin', username: 'admin', password: 'supersecret'
     assert_equal(302, last_response.status)
     assert_equal 'Welcome!', session[:message]
     get last_response['Location']

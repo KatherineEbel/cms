@@ -15,8 +15,10 @@
 </ul>
 
 <% if @user %>
-  <p><em>Signed in as <%= @user %>.</em></p>
-  <form action="/users/signout" method="post">
-    <button type="submit">Sign Out</button>
-  </form>
+  <div class="user">
+    <p><em>Signed in as <%= @user %>.</em></p>
+    <form action="/users/signout" method="post">
+      <button type="submit">Sign Out</button>
+    </form>
+  </div>
 <% end %>
